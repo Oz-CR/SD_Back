@@ -17,6 +17,9 @@ export default class Room extends BaseModel {
   @column({ columnName: 'player2_id' })
   declare player2Id: number | null
 
+  @column({ columnName: 'color_count' })
+  declare colorCount: number
+
   @column()
   declare status: 'waiting' | 'playing' | 'finished'
 
