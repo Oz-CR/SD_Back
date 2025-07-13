@@ -44,7 +44,6 @@ export default class FindGamesController {
       console.log('Datos recibidos:', body)
       console.log('Usuario autenticado:', user)
 
-      // Validar datos requeridos
       if (!body.name || !body.colorCount) {
         return response.status(400).json({
           message: 'Datos incompletos',
@@ -52,7 +51,6 @@ export default class FindGamesController {
         })
       }
 
-      // Validar que colorCount esté en el rango correcto
       if (body.colorCount < 2 || body.colorCount > 6) {
         return response.status(400).json({
           message: 'Cantidad de colores inválida',
@@ -62,13 +60,12 @@ export default class FindGamesController {
 
       const game = await Room.create({
         name: body.name,
-        player1Id: user.id, // Usar el ID del usuario autenticado
+        player1Id: user.id,
         player2Id: null,
         colorCount: body.colorCount,
         status: 'waiting',
       })
 
-      // Cargar la información del jugador para la respuesta
       await game.load('player1')
 
       const gameResponse = {
