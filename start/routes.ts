@@ -38,3 +38,4 @@ router
     router.post('/createRoom', [FindGamesController, 'createGame'])
   })
   .use([middleware.auth()])
+  .prefix('/api/partidas')

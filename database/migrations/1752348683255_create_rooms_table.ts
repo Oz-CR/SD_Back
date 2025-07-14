@@ -9,6 +9,7 @@ export default class extends BaseSchema {
       table.string('name').notNullable()
       table.integer('player1_id').unsigned().notNullable().references('id').inTable('users').onDelete('CASCADE')
       table.integer('player2_id').unsigned().nullable().references('id').inTable('users').onDelete('CASCADE')
+      table.integer('color_count').defaultTo(4).notNullable()
       table.enum('status', ['waiting', 'full', 'started', 'finished']).defaultTo('waiting')
       table.timestamp('created_at')
       table.timestamp('updated_at')
