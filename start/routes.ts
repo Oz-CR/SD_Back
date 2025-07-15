@@ -38,4 +38,7 @@ router
     router.post('/createRoom', [FindGamesController, 'createGame'])
   })
   .use([middleware.auth()])
-  .prefix('/api/partidas')
+  
+router
+  .post('/partidas/join/:roomId', [FindGamesController, 'joinGame'])
+  .use([middleware.auth({ guards: ['api'] })])
