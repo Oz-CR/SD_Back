@@ -14,11 +14,35 @@ export default class Game extends BaseModel {
   @column({ columnName: 'winner_id' })
   declare winnerId: number | null
 
-  @column({ columnName: 'ending_sequence' })
-  declare endingSequence: number
+  @column()
+  declare sequence: string
+
+  @column({ columnName: 'current_round' })
+  declare currentRound: number
+
+  @column({ columnName: 'current_player_turn' })
+  declare currentPlayerTurn: number
+
+  @column({ columnName: 'is_showing_sequence' })
+  declare isShowingSequence: boolean
 
   @column()
-  declare status: 'in_game' | 'finished'
+  declare status: 'waiting' | 'playing' | 'finished'
+
+  @column({ columnName: 'player1_score' })
+  declare player1Score: number
+
+  @column({ columnName: 'player2_score' })
+  declare player2Score: number
+
+  @column({ columnName: 'player1_finished' })
+  declare player1Finished: boolean
+
+  @column({ columnName: 'player2_finished' })
+  declare player2Finished: boolean
+
+  @column({ columnName: 'player_left' })
+  declare playerLeft: number | null
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

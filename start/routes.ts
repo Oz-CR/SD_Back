@@ -42,3 +42,12 @@ router
 router
   .post('/partidas/join/:roomId', [FindGamesController, 'joinGame'])
   .use([middleware.auth({ guards: ['api'] })])
+
+// Rutas para el juego
+router
+  .group(() => {
+    router.get('/game/:roomId/state', '#controllers/games_controller.getGameState')
+    router.post('/game/:roomId/update', '#controllers/games_controller.updateGameState')
+    router.post('/game/:roomId/move', '#controllers/games_controller.makeMove')
+  })
+  .use([middleware.auth({ guards: ['api'] })])
