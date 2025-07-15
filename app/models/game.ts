@@ -11,14 +11,11 @@ export default class Game extends BaseModel {
   @column({ columnName: 'room_id' })
   declare roomId: number
 
-  @column()
-  declare player1InitialBoard: any[] | null
-
-  @column()
-  declare player2InitialBoard: any[] | null
-
   @column({ columnName: 'winner_id' })
   declare winnerId: number | null
+
+  @column({ columnName: 'ending_sequence' })
+  declare endingSequence: number
 
   @column()
   declare status: 'in_game' | 'finished'

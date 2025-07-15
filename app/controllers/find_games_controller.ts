@@ -131,7 +131,7 @@ export default class FindGamesController {
       }
 
       room.player2Id = user.id
-      room.status = 'playing'
+      room.status = 'started'
       await room.save()
 
       await room.load('player1')

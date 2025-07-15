@@ -21,7 +21,7 @@ export default class Room extends BaseModel {
   declare colorCount: number
 
   @column()
-  declare status: 'waiting' | 'playing' | 'finished'
+  declare status: 'waiting' | 'full' | 'started' | 'finished'
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
