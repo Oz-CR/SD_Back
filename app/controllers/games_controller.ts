@@ -1,6 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import Game from '#models/game'
 import Room from '#models/room'
+import { GameHelpers } from '#helpers/game_helpers'
 
 export default class GamesController {
   /**
@@ -67,7 +68,11 @@ export default class GamesController {
         player2Finished: game.player2Finished,
         winnerId: game.winnerId,
         playerLeft: game.playerLeft || null,
-        gameOver: game.status === 'finished'
+        gameOver: game.status === 'finished',
+        room: {
+          colorCount: game.room.colorCount,
+          selectedColors: game.room.selectedColors
+        }
       }
       
       return response.json({

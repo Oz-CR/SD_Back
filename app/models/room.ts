@@ -20,6 +20,19 @@ export default class Room extends BaseModel {
   @column({ columnName: 'color_count' })
   declare colorCount: number
 
+  @column({
+    columnName: 'selected_colors',
+    prepare: (value: string[]) => JSON.stringify(value),
+    consume: (value: string) => {
+      try {
+        return value ? JSON.parse(value) : null
+      } catch {
+        return null
+      }
+    }
+  })
+  declare selectedColors: string[] | null
+
   @column()
   declare status: 'waiting' | 'full' | 'started' | 'finished'
 

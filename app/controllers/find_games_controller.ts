@@ -1,5 +1,7 @@
 import Room from '#models/room'
 import type { HttpContext } from '@adonisjs/core/http'
+import { createRoomValidator } from '#validators/room'
+import { GameHelpers } from '#helpers/game_helpers'
 
 export default class FindGamesController {
   async getGames({ response }: HttpContext) {
@@ -14,6 +16,7 @@ export default class FindGamesController {
         name: room.name,
         host: room.player1.fullName,
         colorCount: room.colorCount,
+        selectedColors: room.selectedColors,
         currentPlayers: room.player2Id ? 2 : 1,
         maxPlayers: 2,
         isActive: room.status === 'waiting',
@@ -35,33 +38,91 @@ export default class FindGamesController {
     }
   }
 
-  async createGame({ request, response, auth }: HttpContext) {
+  async getRoomDetails({ params, response }: HttpContext) {
     try {
-      const body = request.body()
-      const user = await auth.getUserOrFail()
+      const { roomId } = params
+      
+      const room = await Room.query()
+        .where('id', roomId)
+        .preload('player1')
+        .preload('player2')
+        .first()
 
-      console.log('Datos recibidos:', body)
-      console.log('Usuario autenticado:', user)
-
-      if (!body.name || !body.colorCount) {
-        return response.status(400).json({
-          message: 'Datos incompletos',
-          error: 'Se requieren name y colorCount',
+      if (!room) {
+        return response.status(404).json({
+          message: 'Sala no encontrada',
+          error: 'ROOM_NOT_FOUND',
         })
       }
 
-      if (body.colorCount < 2 || body.colorCount > 6) {
-        return response.status(400).json({
-          message: 'Cantidad de colores inválida',
-          error: 'colorCount debe estar entre 2 y 6',
-        })
+      const roomDetails = {
+        id: room.id,
+        name: room.name,
+        host: room.player1.fullName,
+        colorCount: room.colorCount,
+        selectedColors: room.selectedColors,
+        currentPlayers: room.player2Id ? 2 : 1,
+        maxPlayers: 2,
+        isActive: room.status === 'waiting',
+        createdAt: room.createdAt,
+        player1Id: room.player1Id,
+        player2Id: room.player2Id,
+        status: room.status,
+        player1: {
+          id: room.player1.id,
+          fullName: room.player1.fullName,
+          email: room.player1.email,
+        },
+        player2: room.player2 ? {
+          id: room.player2.id,
+          fullName: room.player2.fullName,
+          email: room.player2.email,
+        } : null,
+      }
+
+      return response.json({
+        message: 'Detalles de la sala obtenidos exitosamente',
+        data: roomDetails,
+      })
+    } catch (error) {
+      return response.status(500).json({
+        message: 'Error al obtener los detalles de la sala',
+        error: error.message,
+      })
+    }
+  }
+
+  async createGame({ request, response, auth }: HttpContext) {
+    try {
+      const user = await auth.getUserOrFail()
+      const payload = await request.validateUsing(createRoomValidator)
+
+      console.log('Datos validados:', payload)
+      console.log('Usuario autenticado:', user)
+
+      // Determinar colorCount basado en selectedColors si está presente
+      let finalColorCount = payload.colorCount || 4
+      let finalSelectedColors = payload.selectedColors || null
+
+      if (payload.selectedColors && payload.selectedColors.length > 0) {
+        // Validar que los colores personalizados sean válidos
+        if (!GameHelpers.validateColorArray(payload.selectedColors)) {
+          return response.status(400).json({
+            message: 'Algunos colores seleccionados no son válidos',
+            error: 'INVALID_COLORS'
+          })
+        }
+        
+        finalColorCount = payload.selectedColors.length
+        finalSelectedColors = payload.selectedColors
       }
 
       const game = await Room.create({
-        name: body.name,
+        name: payload.name,
         player1Id: user.id,
         player2Id: null,
-        colorCount: body.colorCount,
+        colorCount: finalColorCount,
+        selectedColors: finalSelectedColors,
         status: 'waiting',
       })
 
@@ -72,6 +133,7 @@ export default class FindGamesController {
         name: game.name,
         host: game.player1.fullName,
         colorCount: game.colorCount,
+        selectedColors: game.selectedColors,
         currentPlayers: 1,
         maxPlayers: 2,
         isActive: true,
@@ -142,6 +204,7 @@ export default class FindGamesController {
         name: room.name,
         host: room.player1.fullName,
         colorCount: room.colorCount,
+        selectedColors: room.selectedColors,
         currentPlayers: 2,
         maxPlayers: 2,
         isActive: false,
