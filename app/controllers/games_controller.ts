@@ -54,6 +54,11 @@ export default class GamesController {
         sequence = []
       }
       
+      // Asegurar que la sala esté cargada con sus datos
+      if (!game.room) {
+        await game.load('room')
+      }
+      
       const gameState = {
         id: game.id,
         roomId: game.roomId,
@@ -70,8 +75,13 @@ export default class GamesController {
         playerLeft: game.playerLeft || null,
         gameOver: game.status === 'finished',
         room: {
+          id: game.room.id,
+          name: game.room.name,
           colorCount: game.room.colorCount,
-          selectedColors: game.room.selectedColors
+          selectedColors: game.room.selectedColors,
+          player1Id: game.room.player1Id,
+          player2Id: game.room.player2Id,
+          status: game.room.status
         }
       }
       

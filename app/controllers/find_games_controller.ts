@@ -115,7 +115,17 @@ export default class FindGamesController {
         
         finalColorCount = payload.selectedColors.length
         finalSelectedColors = payload.selectedColors
+      } else {
+        // Si no hay colores personalizados, generar automáticamente
+        finalSelectedColors = GameHelpers.getAvailableColors(null, finalColorCount)
+        finalColorCount = finalSelectedColors.length
       }
+      
+      console.log('Creando sala con:', {
+        colorCount: finalColorCount,
+        selectedColors: finalSelectedColors,
+        totalColors: finalSelectedColors ? finalSelectedColors.length : 0
+      })
 
       const game = await Room.create({
         name: payload.name,

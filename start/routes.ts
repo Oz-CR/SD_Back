@@ -38,10 +38,11 @@ router
     router.post('/createRoom', [FindGamesController, 'createGame'])
     router.get('/rooms/:roomId/details', [FindGamesController, 'getRoomDetails'])
   })
+  .prefix('/api')
   .use([middleware.auth()])
   
 router
-  .post('/partidas/join/:roomId', [FindGamesController, 'joinGame'])
+  .post('/api/partidas/join/:roomId', [FindGamesController, 'joinGame'])
   .use([middleware.auth({ guards: ['api'] })])
 
 // Rutas para colores - expandidas para soportar colores ilimitados
@@ -50,7 +51,8 @@ router
     router.get('/valid', '#controllers/colors_controller.getValidColors')
     router.post('/generate', '#controllers/colors_controller.generateColorsForRoom')
   })
-  .prefix('/colors')
+  .prefix('/api/colors')
+  .use([middleware.auth()])
   
 // Rutas para el juego
 router
@@ -59,4 +61,5 @@ router
     router.post('/game/:roomId/update', '#controllers/games_controller.updateGameState')
     router.post('/game/:roomId/move', '#controllers/games_controller.makeMove')
   })
-  .use([middleware.auth({ guards: ['api'] })])
+  .prefix('/api')
+  .use([middleware.auth()])
