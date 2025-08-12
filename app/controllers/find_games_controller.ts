@@ -1,15 +1,19 @@
 import Room from '#models/room'
 import type { HttpContext } from '@adonisjs/core/http'
 import { createRoomValidator } from '#validators/room'
-import { GameHelpers } from '#helpers/game_helpers'
+import { GameHelpers } from '../helpers/game_helpers.js'
 
 export default class FindGamesController {
   async getGames({ response }: HttpContext) {
     try {
+      console.log('🔍 [getGames] Iniciando consulta de partidas disponibles...')
+      
       const rooms = await Room.query()
         .where('status', 'waiting')
         .preload('player1')
         .orderBy('createdAt', 'desc')
+        
+      console.log('📊 [getGames] Partidas encontradas:', rooms.length)
 
       const roomsWithDetails = rooms.map((room) => ({
         id: room.id,
@@ -31,9 +35,11 @@ export default class FindGamesController {
         data: roomsWithDetails,
       })
     } catch (error) {
+      console.error('❌ [getGames] Error:', error)
       return response.status(500).json({
         message: 'Error al obtener las partidas',
         error: error.message,
+        stack: error.stack
       })
     }
   }
@@ -94,31 +100,71 @@ export default class FindGamesController {
 
   async createGame({ request, response, auth }: HttpContext) {
     try {
+      console.log('🎮 [createGame] Iniciando creación de partida...')
+      
       const user = await auth.getUserOrFail()
+      console.log('👤 [createGame] Usuario autenticado:', { id: user.id, email: user.email })
+      
+      const rawPayload = request.all()
+      console.log('📨 [createGame] Datos RAW recibidos:', {
+        rawPayload,
+        contentType: request.header('content-type'),
+        body: request.body()
+      })
+      
       const payload = await request.validateUsing(createRoomValidator)
-
-      console.log('Datos validados:', payload)
-      console.log('Usuario autenticado:', user)
+      console.log('✅ [createGame] Datos validados:', {
+        name: payload.name,
+        colorCount: payload.colorCount,
+        selectedColors: payload.selectedColors,
+        selectedColorsType: typeof payload.selectedColors,
+        isArray: Array.isArray(payload.selectedColors),
+        length: payload.selectedColors?.length
+      })
 
       // Determinar colorCount basado en selectedColors si está presente
       let finalColorCount = payload.colorCount || 4
       let finalSelectedColors = payload.selectedColors || null
 
+      console.log('📝 [createGame] Datos de entrada:', {
+        colorCount: payload.colorCount,
+        selectedColors: payload.selectedColors,
+        selectedColorsLength: payload.selectedColors?.length
+      })
+
       if (payload.selectedColors && payload.selectedColors.length > 0) {
+        // Validar que la cantidad coincida
+        if (payload.colorCount && payload.selectedColors.length !== payload.colorCount) {
+          return response.status(400).json({
+            message: `Se esperaban ${payload.colorCount} colores, pero se recibieron ${payload.selectedColors.length}`,
+            error: 'COLOR_COUNT_MISMATCH'
+          })
+        }
+
         // Validar que los colores personalizados sean válidos
         if (!GameHelpers.validateColorArray(payload.selectedColors)) {
           return response.status(400).json({
-            message: 'Algunos colores seleccionados no son válidos',
+            message: 'Algunos colores seleccionados no son válidos o están duplicados',
             error: 'INVALID_COLORS'
           })
         }
         
         finalColorCount = payload.selectedColors.length
         finalSelectedColors = payload.selectedColors
+        
+        console.log('✅ [createGame] Usando colores personalizados:', {
+          count: finalColorCount,
+          colors: finalSelectedColors
+        })
       } else {
         // Si no hay colores personalizados, generar automáticamente
         finalSelectedColors = GameHelpers.getAvailableColors(null, finalColorCount)
         finalColorCount = finalSelectedColors.length
+        
+        console.log('🔄 [createGame] Usando colores automáticos:', {
+          count: finalColorCount,
+          colors: finalSelectedColors
+        })
       }
       
       console.log('Creando sala con:', {
@@ -158,9 +204,11 @@ export default class FindGamesController {
         data: gameResponse,
       })
     } catch (error) {
+      console.error('❌ [createGame] Error:', error)
       return response.status(500).json({
         message: 'Error al crear la partida',
         error: error.message,
+        stack: error.stack
       })
     }
   }

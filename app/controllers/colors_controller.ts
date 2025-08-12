@@ -124,7 +124,7 @@ export default class ColorsController {
    */
   async generateColorsForRoom({ request, response }: HttpContext) {
     try {
-      const { colorCount } = request.body()
+      const { colorCount, selectedColors } = request.body()
       
       if (!colorCount || colorCount < 2) {
         return response.status(400).json({
@@ -133,6 +133,49 @@ export default class ColorsController {
         })
       }
 
+      // Si se proporcionan colores específicos, usarlos
+      if (selectedColors && Array.isArray(selectedColors) && selectedColors.length > 0) {
+        // Validar que la cantidad de colores seleccionados coincida
+        if (selectedColors.length !== colorCount) {
+          return response.status(400).json({
+            message: `Se esperaban ${colorCount} colores, pero se recibieron ${selectedColors.length}`,
+            error: 'COLOR_COUNT_MISMATCH'
+          })
+        }
+
+        // Convertir colores personalizados al formato esperado
+        const customColors = selectedColors.map((colorName: string, index: number) => {
+          // Si es un color hexadecimal
+          if (colorName.startsWith('#')) {
+            return {
+              name: `custom-${index + 1}`,
+              displayName: `Color ${index + 1}`,
+              hexColor: colorName
+            }
+          }
+          
+          // Si es un color base conocido
+          const baseColor = this.BASE_COLORS.find(color => color.name === colorName)
+          if (baseColor) {
+            return baseColor
+          }
+          
+          // Color personalizado con nombre
+          return {
+            name: colorName,
+            displayName: colorName.charAt(0).toUpperCase() + colorName.slice(1),
+            hexColor: this.generateRandomHexColor()
+          }
+        })
+
+        return response.json({
+          message: 'Colores personalizados generados exitosamente',
+          data: customColors,
+          totalColors: customColors.length
+        })
+      }
+
+      // Comportamiento por defecto: usar colores predefinidos
       let colors = [...this.BASE_COLORS]
 
       // Generar colores adicionales si es necesario

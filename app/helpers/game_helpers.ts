@@ -119,6 +119,13 @@ export class GameHelpers {
     const hexColorRegex = /^#[0-9A-Fa-f]{6}$/
     const validColorNames = [...this.BASE_COLORS]
     
+    // Verificar que no haya colores duplicados
+    const uniqueColors = new Set(colors)
+    if (uniqueColors.size !== colors.length) {
+      console.log('❌ Colores duplicados detectados')
+      return false
+    }
+    
     return colors.every(color => {
       // Validar si es un color hexadecimal válido
       if (hexColorRegex.test(color)) {
@@ -127,6 +134,11 @@ export class GameHelpers {
       
       // Validar si es un nombre de color válido o generado dinámicamente
       if (validColorNames.includes(color) || color.startsWith('color')) {
+        return true
+      }
+      
+      // Permitir cualquier string que no esté vacío (para colores personalizados)
+      if (typeof color === 'string' && color.trim().length > 0) {
         return true
       }
       

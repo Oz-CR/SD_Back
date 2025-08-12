@@ -59,6 +59,13 @@ export default class GamesController {
         await game.load('room')
       }
       
+      // Si la sala está "started" y el juego está en "waiting", cambiar el estado del juego automáticamente
+      if (game.room.status === 'started' && game.status === 'waiting' && game.currentRound === 0) {
+        console.log('🔄 Sala está lista (started) pero juego en waiting - actualizando estado para auto-inicio');
+        console.log('🎨 Colores disponibles para el juego:', game.room.selectedColors);
+        // No cambiamos el estado aquí, el frontend lo detectará y auto-iniciará
+      }
+      
       const gameState = {
         id: game.id,
         roomId: game.roomId,

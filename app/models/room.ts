@@ -22,13 +22,52 @@ export default class Room extends BaseModel {
 
   @column({
     columnName: 'selected_colors',
-    prepare: (value: string[]) => JSON.stringify(value),
-    consume: (value: string) => {
-      try {
-        return value ? JSON.parse(value) : null
-      } catch {
-        return null
+    prepare: (value: string[] | null) => {
+      if (!value || !Array.isArray(value)) {
+        return null;
       }
+      // Para columnas JSON de MySQL, necesitamos serializarlas como string JSON
+      const jsonString = JSON.stringify(value);
+      console.log('🔧 [ROOM MODEL] Preparando selectedColors para BD (JSON column):', {
+        input: value,
+        inputType: typeof value,
+        isArray: Array.isArray(value),
+        output: jsonString,
+        outputType: typeof jsonString
+      });
+      return jsonString;
+    },
+    consume: (value: string[] | string | null) => {
+      console.log('🔍 [ROOM MODEL] Consumiendo selectedColors desde BD:', {
+        rawValue: value,
+        valueType: typeof value,
+        isArray: Array.isArray(value)
+      });
+      
+      if (!value) {
+        return null;
+      }
+      
+      // MySQL JSON columns devuelven arrays JS directamente
+      if (Array.isArray(value)) {
+        console.log('✅ [ROOM MODEL] Recibido como array JS (columna JSON):', value);
+        return value;
+      }
+      
+      // Fallback: si viene como string, intentar parsear
+      if (typeof value === 'string') {
+        try {
+          const parsed = JSON.parse(value);
+          console.log('✅ [ROOM MODEL] String JSON parseado:', parsed);
+          return Array.isArray(parsed) ? parsed : null;
+        } catch (error) {
+          console.error('❌ [ROOM MODEL] Error parseando JSON:', error.message, 'Value:', value);
+          return null;
+        }
+      }
+      
+      console.warn('⚠️ [ROOM MODEL] Tipo de valor inesperado:', typeof value, value);
+      return null;
     }
   })
   declare selectedColors: string[] | null
